@@ -13,7 +13,6 @@ public class MeteoController {
 	Model model;
 	
 	public void setModel(Model m){
-		
 		this.model = m;
 	}
 

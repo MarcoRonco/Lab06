@@ -16,11 +16,10 @@ public class Model {
 
 	private MeteoDAO mDAO = new MeteoDAO();
 	private List<Citta> citta = mDAO.getAllCitta();
+	List<SimpleCity> ottimo = new ArrayList<SimpleCity>();
 	private int mese = 0;
 
-	public Model() {
-
-	}
+	public Model() {}
 
 	public String getUmiditaMedia(int mese) {
 
@@ -28,15 +27,13 @@ public class Model {
 
 		for (Citta c : citta) {
 
-			s += c.getNome() + mDAO.getAvgRilevamentiLocalitaMese(mese, c.getNome()) + '\n';
+			s += c.getNome() + " " + mDAO.getAvgRilevamentiLocalitaMese(mese, c.getNome()) + '\n';
 
 		}
 		return s;
 	}
 
-	List<SimpleCity> ottimo = new ArrayList<SimpleCity>();
-
-	public String trovaSequenza(int mese) {
+	public String trovaSequenza(int mese){
 
 		List<SimpleCity> parziale = new ArrayList<SimpleCity>();
 		this.mese = mese;
@@ -45,44 +42,35 @@ public class Model {
 		return ottimo.toString();
 	}
 
-	private void ricorsione(List<SimpleCity> parziale, int step) {
-		System.out.println(step);
-
-		System.out.println(parziale);
+	private void ricorsione(List<SimpleCity> parziale, int step){
 		
-		if (step >= NUMERO_GIORNI_TOTALI) {
-
-			System.out.println("entrato");
+		if (step == NUMERO_GIORNI_TOTALI){
+			
 			if (ottimo.size() == 0) {
 				ottimo.addAll(parziale);
 			}
-
-			if (punteggioSoluzione(parziale) < punteggioSoluzione(ottimo)) {
-
+			if (punteggioSoluzione(parziale) < punteggioSoluzione(ottimo) && controllaFinale(parziale)){
+				
 				ottimo.clear();
 				ottimo.addAll(parziale);
-				System.out.println(ottimo.toString());
-
+				return;
 			}
 		}
 
-		for (int i = 0; i < citta.size(); i++) {
+		for (int i = 0; i < citta.size(); i++){
 
 			SimpleCity sc = new SimpleCity(citta.get(i).getNome());
-
-			sc.setCosto(costoGiorno(citta.get(i).getNome(), mese, step + 1));
-
+			sc.setCosto(costoGiorno(citta.get(i).getNome(), mese, step+1));
 			parziale.add(sc);
-			citta.get(i).setCounter(citta.get(i).getCounter() + 1);
+			citta.get(i).increaseCounter();
 
-			if (citta.get(i).getCounter() < NUMERO_GIORNI_CITTA_MAX && controllaParziale(parziale) == true) {
-
-				this.ricorsione(parziale, step + 1);
-
+			if (citta.get(i).getCounter() <= NUMERO_GIORNI_CITTA_MAX && controllaParziale(parziale)) {
+				
+				this.ricorsione(parziale, step+1);
+				System.out.println(step+1);
 			}
-
 			parziale.remove(sc);
-			citta.get(i).setCounter(citta.get(i).getCounter() - 1);
+			citta.get(i).setCounter(citta.get(i).getCounter()-1);
 		}
 
 	}
@@ -90,8 +78,7 @@ public class Model {
 	private int costoGiorno(String nome, int mese, int step) {
 
 		for (Rilevamento d : mDAO.getAllRilevamenti()) {
-			if (d.getData().getDay() == step && d.getData().getMonth() == mese
-					&& d.getLocalita().compareTo(nome) == 0) {
+			if (d.getData().getDay()==step && d.getData().getMonth()==mese && d.getLocalita().compareTo(nome)==0){
 				return d.getUmidita();
 			}
 		}
@@ -100,19 +87,16 @@ public class Model {
 
 	private Double punteggioSoluzione(List<SimpleCity> soluzioneCandidata) {
 
-		double score = 0.0;
-		for (int i = 0; i < soluzioneCandidata.size(); i++) {
+		SimpleCity s = soluzioneCandidata.get(0);
+		double score = 0;
+		for (SimpleCity t: soluzioneCandidata) {
 
-			if (i > 0) {
-
-				if (soluzioneCandidata.get(i).equals(soluzioneCandidata.get(i - 1))) {
-					score += soluzioneCandidata.get(i).getCosto();
-				} else {
-					score += soluzioneCandidata.get(i).getCosto() + COST;
-				}
-			} else {
-				score += soluzioneCandidata.get(i).getCosto();
-			}
+			if(!t.equals(s))
+				score+=t.getCosto()+COST;
+			else
+				score+=t.getCosto();
+			
+			s=t;
 		}
 		return score;
 	}
@@ -120,28 +104,38 @@ public class Model {
 	private boolean controllaParziale(List<SimpleCity> parziale) {
 
 		boolean h = true;
-		int count = 1;
-		for (int i = 0; i < parziale.size() - 1; i++) {
-			if (parziale.get(i).equals(parziale.get(i + 1))) {
+		int count = 0;
+		
+		for (int i =0; i<parziale.size()-1; i++) {
+			
+			if (parziale.get(i).equals(parziale.get(i+1))){
 				count++;
 			} else {
-				if (count < NUMERO_GIORNI_CITTA_CONSECUTIVI_MIN) {
-					h = false;
-				}
-				count = 1;
-			}
-		}
-
-		if (parziale.size() == 15) {
-			for(int y = 0; y < citta.size(); y++) {
-				SimpleCity s = new SimpleCity(citta.get(y).getNome());
-				if(!parziale.contains(s)){
-					h=false;
+				if (count<NUMERO_GIORNI_CITTA_CONSECUTIVI_MIN){
+					return false;
+				}else{
+					count = 1;
 				}
 			}
-		}
-
+		}		
 		return h;
 	}
-
+	
+	private boolean controllaFinale(List<SimpleCity> parziale) {
+		
+		boolean h = true;
+		
+		for (Citta c : citta) {
+			 SimpleCity y =new SimpleCity(c.getNome());
+			 if (!parziale.contains(y)){
+				 h=false;
+			 }
+		}
+		
+		if(!parziale.get(parziale.size()-1).equals(parziale.get(parziale.size()-2)) 
+				&& !parziale.get(parziale.size()-1).equals(parziale.get(parziale.size()-3)))
+			h=false;
+		
+		return h;
+	}
 }

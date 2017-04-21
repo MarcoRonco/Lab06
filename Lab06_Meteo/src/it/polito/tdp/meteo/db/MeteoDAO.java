@@ -14,9 +14,9 @@ public class MeteoDAO {
 
 	public List<Rilevamento> getAllRilevamenti() {
 
-		final String sql = "SELECT Localita, Data, Umidita "
-						+"FROM situazione "
-						+"ORDER BY data ASC";
+		final String sql = "SELECT Localita, Data, Umidita "+
+						   "FROM situazione "+
+						   "ORDER BY data ASC";
 
 		List<Rilevamento> rilevamenti = new ArrayList<Rilevamento>();
 
@@ -44,18 +44,19 @@ public class MeteoDAO {
 
 	public List<Rilevamento> getAllRilevamentiLocalitaMese(int mese, String localita) {
 
-		final String sql = "SELECT Localita, Data, Umidita "
-						  +"FROM situazione "
-						  +"WHERE data>=? "
-						  +"AND data<=? "
-						  +"AND localita=? "
-						  +"ORDER BY data ASC";
+		final String sql = "SELECT Localita, Data, Umidita "+
+						   "FROM situazione "+
+						   "WHERE data>=? "+
+						   "AND data<=? "+
+						   "AND localita=? "+
+						   "ORDER BY data ASC";
 
 		List<Rilevamento> rilevamenti = new ArrayList<Rilevamento>();
 
 		try {
 			Connection conn = DBConnect.getInstance().getConnection();
 			PreparedStatement st = conn.prepareStatement(sql);
+			
 			String d1 = "2013-"+mese+"-01";
 			String d2 = "2013-"+mese+"-31";
 			st.setString(1, d1);
@@ -82,18 +83,19 @@ public class MeteoDAO {
 
 	public Double getAvgRilevamentiLocalitaMese(int mese, String localita) {
 
-		final String sql = "SELECT AVG(umidita)"
-				          +"FROM situazione "
-				          +"WHERE data>=? "
-				          +"AND data<=? "
-				          +"AND localita=? "
-				          +"ORDER BY data ASC";
+		final String sql = "SELECT AVG(umidita) "+
+				           "FROM situazione "+
+				           "WHERE data>=? "+
+				           "AND data<=? "+
+				           "AND localita=? "+
+				           "ORDER BY data ASC";
 
         double media= 0.0;
 
         try {
         	Connection conn = DBConnect.getInstance().getConnection();
         	PreparedStatement st = conn.prepareStatement(sql);
+        	
         	String d1 = "2013-"+mese+"-01";
         	String d2 = "2013-"+mese+"-31";
         	st.setString(1, d1);
@@ -118,8 +120,8 @@ public class MeteoDAO {
 
 	public List<Citta> getAllCitta() {
 
-		final String sql = "SELECT DISTINCT Localita "
-						  +"FROM situazione ";
+		final String sql = "SELECT DISTINCT Localita "+
+						   "FROM situazione";
 
 		List<Citta> citta = new ArrayList<Citta>();
 
